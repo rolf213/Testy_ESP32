@@ -1,0 +1,82 @@
+                                            z maina:
+
+volatile bool* interrupt_pointer = false;
+
+void loop_task(void *param){
+    int counter = 0;
+
+    //konfiguracja
+    dac_oneshot_config();
+
+    while(true){
+
+        *interrupt_pointer = false;
+        while (*interrupt_pointer == false);
+
+        for(int i=0; i<10; ++i){
+            *interrupt_pointer = false;
+            counter = 0;
+
+            //loop
+            
+
+            //Busy Loop
+            while (*interrupt_pointer == false){
+                ++counter;
+            } 
+        }
+
+        printf("remaining ticks: %d \n", counter);
+        vTaskDelay(pdMS_TO_TICKS(3000));
+    }
+}
+
+
+void app_main(void)
+{
+    
+    interrupt_pointer = initialize_timer(1E6, 1E2);
+
+    //Tworzenie taska przypiętego do rdzenia 1
+    xTaskCreate(loop_task, "Loop", 2048, NULL, 1, NULL);
+
+}
+
+
+
+                                                    z signal processing:
+
+#include "driver/dac_continuous.h"
+
+#include "signals_data.c"
+
+#define BUF_LEN 512
+#define FREQ_HZ 1000
+
+uint8_t buf[BUF_LEN];
+size_t bytes_written = 0;
+
+void update_buf(uint8_t *buffer){
+    for(int i=0; i<BUF_LEN; i++){
+        buffer[i] = (uint8_t)(sinus[i]*255);
+    }
+}
+
+void config_continuous_dac(){
+    dac_continuous_config_t dac_continous_config = {
+        .chan_mask = DAC_CHANNEL_MASK_ALL,
+        .desc_num = 2,
+        .buf_size = BUF_LEN,
+        .freq_hz = FREQ_HZ * BUF_LEN,
+        .offset = 0,
+        .clk_src = DAC_DIGI_CLK_SRC_DEFAULT,
+        .chan_mode = DAC_CHANNEL_MODE_ALTER
+    };
+
+    dac_continuous_handle_t handle = NULL;
+    update_buf(buf);
+
+    dac_continuous_new_channels(&dac_continous_config, &handle);
+    dac_continuous_enable(handle);
+    dac_continuous_write_cyclically(handle, buf, BUF_LEN, &bytes_written);
+}
