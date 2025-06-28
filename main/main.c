@@ -10,18 +10,17 @@ volatile bool* interrupt_pointer = false;
 #define TIMER_FREQ 1E7
 #define SAMPLING_FREQ 44.1E3
 
-void loop_task(void *param){
-    uint8_t counter = 0;
 
-    //konfiguracja
+
+void loop_task(void *param){
+    int counter = 0;
     dac_oneshot_config();
 
     while(true){
-
         *interrupt_pointer = false;
         while (*interrupt_pointer == false);
 
-        for(int i=0x00; i<=0xFFF; ++i){
+        for(int i=0; i<=1023; ++i){
             *interrupt_pointer = false;
             counter = 0;
 

@@ -13,7 +13,6 @@ void dac_oneshot_config(){
 
 
 void output_quantized(int index){
-    index = index & 0x07;
-    dac_oneshot_output_voltage(handle, sinus_quantized[index]);
+    //index = index & 1023;
+    dac_oneshot_output_voltage(handle, sinus[index]);
 }
-
