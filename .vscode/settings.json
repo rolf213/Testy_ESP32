@@ -6,7 +6,7 @@
     "interface/ftdi/esp32_devkitj_v1.cfg",
     "target/esp32.cfg"
   ],
-  "idf.portWin": "COM4",
+  "idf.portWin": "COM5",
   "idf.toolsPathWin": "c:\\ESP32\\Tools",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32"

@@ -14,18 +14,21 @@ volatile bool* interrupt_pointer = false;
 
 void loop_task(void *param){
     int counter = 0;
-    dac_oneshot_config();
+    //output_dac_config();
+    output_GPIO_config();
 
     while(true){
         *interrupt_pointer = false;
         while (*interrupt_pointer == false);
 
-        for(int i=0; i<=1023; ++i){
+        for(int i=0; i<=0xFF; ++i){
             *interrupt_pointer = false;
             counter = 0;
 
             //funkcje wyzwalane w pętli
-            output_quantized(i);
+            //output_quantized_dithered(i);
+            output_GPIO(i);
+
 
             //Busy Loop
             while (*interrupt_pointer == false){
@@ -45,6 +48,6 @@ void app_main(void)
     interrupt_pointer = initialize_timer(TIMER_FREQ, (int)(TIMER_FREQ/SAMPLING_FREQ));
 
     //Tworzenie taska przypiętego do rdzenia 1
-    xTaskCreate(loop_task, "Loop", 2048, NULL, 1, NULL);
+    xTaskCreate(loop_task, "Loop", 16384, NULL, 1, NULL);
 
 }
