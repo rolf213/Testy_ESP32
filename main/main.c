@@ -4,6 +4,7 @@
 
 #include "timer.c"
 #include "signals_processing.c"
+#include "signals_data.c"
 
 volatile bool* interrupt_pointer = false;
 
@@ -15,19 +16,19 @@ volatile bool* interrupt_pointer = false;
 void loop_task(void *param){
     int counter = 0;
     //output_dac_config();
-    output_GPIO_config();
+    output_GPIO_PWM_config();
 
     while(true){
         *interrupt_pointer = false;
         while (*interrupt_pointer == false);
 
-        for(int i=0; i<=0xFF; ++i){
+        for(int i=0; i<=0xFFF; ++i){
             *interrupt_pointer = false;
             counter = 0;
 
             //funkcje wyzwalane w pętli
-            //output_quantized_dithered(i);
-            output_GPIO(i);
+            output_PWM(sinus1422[i & SINUS_MASK], VFPWM);
+            //output_dac(sinus1422[i & SINUS_MASK], quantize_dither);
 
 
             //Busy Loop
@@ -37,7 +38,7 @@ void loop_task(void *param){
         }
 
         printf("remaining ticks: %d \n", counter);
-        vTaskDelay(pdMS_TO_TICKS(3000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
