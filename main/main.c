@@ -12,12 +12,11 @@ volatile bool* interrupt_pointer = false;
 #define SAMPLING_FREQ 44.1E3
 
 
-
 void loop_task(void *param){
     int counter = 0;
-    //output_dac_config();
+    output_dac_config();
+    //output_ledc_PWM_config();
     //output_GPIO_PWM_config();
-    output_ledc_PWM_config();
 
     while(true){
         *interrupt_pointer = false;
@@ -28,9 +27,14 @@ void loop_task(void *param){
             counter = 0;
 
             //funkcje wyzwalane w pętli
-            //output_PWM(sinus1422[i & SINUS_MASK], VFPWM);
+            output_dac(sinus1422[i & SINUS_MASK], quantize);
             //output_dac(sinus1422[i & SINUS_MASK], quantize_dither);
-            output_ledc_PWM(sinus1422[i & SINUS_MASK], ledc_PWM);
+            
+            //output_ledc_PWM(sinus1422[i & SINUS_MASK], ledc_PWM);
+            //output_ledc_PWM(sinus1422[i & SINUS_MASK], ledc_VFPWM); //nie wyrabia czasowo
+
+            //output_GPIO_PWM(sinus1422[i & SINUS_MASK], PWM);
+            //output_GPIO_PWM(sinus1422[i & SINUS_MASK], VFPWM);
 
 
             //Busy Loop
@@ -40,7 +44,7 @@ void loop_task(void *param){
         }
 
         printf("remaining ticks: %d \n", counter);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 

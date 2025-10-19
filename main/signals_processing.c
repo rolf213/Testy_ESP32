@@ -30,7 +30,7 @@ void output_dac(float value, quant_variant variant){
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// PWM
+// GPIO PWM
 
 #define OUT_GPIO_PIN (25)
 
@@ -53,7 +53,7 @@ void VFPWM(int *freq){
     *freq = *freq + (rand() & 8191);
 }
 
-void output_PWM(float value, PWM_variant variant){
+void output_GPIO_PWM(float value, PWM_variant variant){
     static float phase = 0;
     int freq = 10000;
     variant(&freq);
