@@ -7,6 +7,47 @@
 
 #include "driver/ledc.h"
 
+
+////////////////////////////////////////////////////////////////////////////
+// global
+
+typedef void (*global_conf_variant)();
+void dac(){
+    output_dac_config();
+    return;
+}
+void ledc(){
+    output_ledc_PWM_config();
+    return;
+}
+void GPIO(){
+    output_GPIO_PWM_config();
+    return;
+}
+
+void global_config(global_conf_variant variant){
+    variant();
+}
+
+
+typedef void (*global_out_variant)(float value, quant_variant variant);
+void dac(){
+    output_dac(ramp01[sample], quantize);
+    return;
+}
+void ledc(){
+    output_ledc_PWM_config();
+    return;
+}
+void GPIO(){
+    output_GPIO_PWM_config();
+    return;
+}
+
+void global_config(global_conf_variant variant){
+    variant();
+}
+
 ////////////////////////////////////////////////////////////////////////////
 // DAC
 
