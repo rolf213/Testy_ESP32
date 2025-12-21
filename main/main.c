@@ -11,13 +11,15 @@ volatile bool* interrupt_pointer = false;
 #define TIMER_FREQ 1E7
 #define SAMPLING_FREQ 44.1E3
 
+conf_variant_type conf_variant[3] = {conf_dac, conf_ledc, conf_GPIO};
+out_variant_type out_variant[6] = {out_dac_quantize, out_dac_quantize_dither, out_ledc_PWM, out_ledc_VFPWM, out_GPIO, out_GPIO_VFPWM};
+uint8_t i = 1;
 
 void loop_task(void *param){
     int counter = 0;
     int sample = 0;
-    //output_dac_config();
-    output_ledc_PWM_config();
-    //output_GPIO_PWM_config();
+
+    global_config(conf_variant[i>>1]);
     //GPIO25
 
     while(true){
@@ -30,23 +32,16 @@ void loop_task(void *param){
             counter = 0;
 
             //funkcje wyzwalane w pętli
-            //output_dac(ramp01[sample], quantize);
-            //output_dac(ramp01[sample], quantize_dither);
-            
-            output_ledc_PWM(ramp01[sample], ledc_PWM);
-            //output_ledc_PWM(sinus1422[i & SINUS_MASK], ledc_VFPWM); //nie wyrabia czasowo
-
-            //output_GPIO_PWM(sinus1422[i & SINUS_MASK], PWM);
-            //output_GPIO_PWM(sinus1422[i & SINUS_MASK], VFPWM);
-
+            global_out(ramp01[sample], out_variant[i]);
 
             //Busy Loop
             while (*interrupt_pointer == false){
                 ++counter;
             }
         }
-        sample = (sample + 1) & RAMP_MASK;
+
         printf("remaining ticks: %d %d \n", counter, sample);
+        sample = (sample + 1) & RAMP_MASK;
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }

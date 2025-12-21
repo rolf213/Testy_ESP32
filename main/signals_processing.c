@@ -9,46 +9,6 @@
 
 
 ////////////////////////////////////////////////////////////////////////////
-// global
-
-typedef void (*global_conf_variant)();
-void dac(){
-    output_dac_config();
-    return;
-}
-void ledc(){
-    output_ledc_PWM_config();
-    return;
-}
-void GPIO(){
-    output_GPIO_PWM_config();
-    return;
-}
-
-void global_config(global_conf_variant variant){
-    variant();
-}
-
-
-typedef void (*global_out_variant)(float value, quant_variant variant);
-void dac(){
-    output_dac(ramp01[sample], quantize);
-    return;
-}
-void ledc(){
-    output_ledc_PWM_config();
-    return;
-}
-void GPIO(){
-    output_GPIO_PWM_config();
-    return;
-}
-
-void global_config(global_conf_variant variant){
-    variant();
-}
-
-////////////////////////////////////////////////////////////////////////////
 // DAC
 
 dac_oneshot_handle_t handle;
@@ -70,44 +30,6 @@ void output_dac(float value, quant_variant variant){
     dac_oneshot_output_voltage(handle, variant(value));
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// GPIO PWM
-
-#define OUT_GPIO_PIN (25)
-
-void output_GPIO_PWM_config(){
-    gpio_config_t out_GPIO_conf = {
-        .pin_bit_mask = (1ULL << OUT_GPIO_PIN),
-        .mode = GPIO_MODE_OUTPUT,
-        .pull_up_en = 0,
-        .pull_down_en =0,
-        .intr_type = GPIO_INTR_DISABLE,
-    };
-    gpio_config(&out_GPIO_conf);
-}
-
-typedef void (*PWM_variant)();
-void PWM(int *freq){
-}
-void VFPWM(int *freq){
-    //4095
-    *freq = *freq + (rand() & 8191);
-}
-
-void output_GPIO_PWM(float value, PWM_variant variant){
-    static float phase = 0;
-    int freq = 10000;
-    variant(&freq);
-    float phase_inc = ((float)freq) / 44100 * 255;
-
-    if(phase < value){
-        GPIO.out_w1ts = (1 << OUT_GPIO_PIN);
-    }
-    else{
-        GPIO.out_w1tc = (1 << OUT_GPIO_PIN);
-    }
-    phase = (int)(phase + phase_inc) & 255;
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // PWM ledc
@@ -151,8 +73,102 @@ void ledc_VFPWM(int *freq){
     ledc_set_freq(LEDC_MODE, LEDC_TIMER, 10000 + (rand() & 8191));
 }
 
-void output_ledc_PWM(float value, PWM_variant variant){
+void output_ledc_PWM(float value, ledc_PWM_variant variant){
     variant();
     ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, (int)(value*ledc_scale));
     ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// GPIO PWM
+
+#define OUT_GPIO_PIN (25)
+
+void output_GPIO_PWM_config(){
+    gpio_config_t out_GPIO_conf = {
+        .pin_bit_mask = (1ULL << OUT_GPIO_PIN),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = 0,
+        .pull_down_en =0,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
+    gpio_config(&out_GPIO_conf);
+}
+
+typedef void (*PWM_variant)();
+void GPIO_PWM(int *freq){
+}
+void GPIO_VFPWM(int *freq){
+    //4095
+    *freq = *freq + (rand() & 8191);
+}
+
+void output_GPIO_PWM(float value, PWM_variant variant){
+    static float phase = 0;
+    int freq = 10000;
+    variant(&freq);
+    float phase_inc = ((float)freq) / 44100 * 255;
+
+    if(phase < value){
+        GPIO.out_w1ts = (1 << OUT_GPIO_PIN);
+    }
+    else{
+        GPIO.out_w1tc = (1 << OUT_GPIO_PIN);
+    }
+    phase = (int)(phase + phase_inc) & 255;
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+// main aliases
+
+typedef void (*conf_variant_type)(void);
+void conf_dac(void){
+    output_dac_config();
+    return;
+}
+void conf_ledc(void){
+    output_ledc_PWM_config();
+    return;
+}
+void conf_GPIO(void){
+    output_GPIO_PWM_config();
+    return;
+}
+
+void global_config(conf_variant_type variant){
+    variant();
+}
+
+
+typedef void (*out_variant_type)(float value);
+
+void out_dac_quantize(float value){
+    output_dac(value,quantize);
+    return;
+}
+void out_dac_quantize_dither(float value){
+    output_dac(value,quantize_dither);
+    return;
+}
+void out_ledc_PWM(float value){
+    output_ledc_PWM(value,ledc_PWM);
+    return;
+}
+void out_ledc_VFPWM(float value){
+    output_ledc_PWM(value,ledc_VFPWM);
+    return;
+}
+void out_GPIO(float value){
+    output_GPIO_PWM(value,GPIO_PWM);
+    return;
+}
+void out_GPIO_VFPWM(float value){
+    output_GPIO_PWM(value,GPIO_VFPWM);
+    return;
+}
+
+void global_out(float value, out_variant_type variant){
+    variant(value);
 }
