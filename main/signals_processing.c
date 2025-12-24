@@ -89,8 +89,8 @@ void output_GPIO_PWM_config(){
     gpio_config_t out_GPIO_conf = {
         .pin_bit_mask = (1ULL << OUT_GPIO_PIN),
         .mode = GPIO_MODE_OUTPUT,
-        .pull_up_en = 0,
-        .pull_down_en =0,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_DISABLE,
     };
     gpio_config(&out_GPIO_conf);
@@ -171,4 +171,19 @@ void out_GPIO_VFPWM(float value){
 
 void global_out(float value, out_variant_type variant){
     variant(value);
+}
+
+
+void variant_selector_config(){
+    gpio_config_t selector_conf = {
+        .pin_bit_mask =
+            (1ULL << 16) |
+            (1ULL << 17) |
+            (1ULL << 18),
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_ENABLE,
+        .intr_type = GPIO_INTR_DISABLE
+    };
+    gpio_config(&selector_conf);
 }

@@ -13,13 +13,13 @@ volatile bool* interrupt_pointer = false;
 
 conf_variant_type conf_variant[3] = {conf_dac, conf_ledc, conf_GPIO};
 out_variant_type out_variant[6] = {out_dac_quantize, out_dac_quantize_dither, out_ledc_PWM, out_ledc_VFPWM, out_GPIO, out_GPIO_VFPWM};
-uint8_t i = 1;
+uint32_t variant_selector = 0;
 
 void loop_task(void *param){
     int counter = 0;
     int sample = 0;
 
-    global_config(conf_variant[i>>1]);
+    global_config(conf_variant[variant_selector>>1]);
     //GPIO25
 
     while(true){
@@ -32,7 +32,8 @@ void loop_task(void *param){
             counter = 0;
 
             //funkcje wyzwalane w pętli
-            global_out(ramp01[sample], out_variant[i]);
+            //variant_selector = (REG_READ(GPIO_IN_REG)>>16)&7;
+            global_out(ramp01[sample], out_variant[variant_selector]);
 
             //Busy Loop
             while (*interrupt_pointer == false){
@@ -40,7 +41,7 @@ void loop_task(void *param){
             }
         }
 
-        printf("remaining ticks: %d %d \n", counter, sample);
+        //printf("variant: %ld remaining ticks: %d \n", variant_selector, counter);
         sample = (sample + 1) & RAMP_MASK;
         vTaskDelay(pdMS_TO_TICKS(10));
     }
@@ -49,8 +50,11 @@ void loop_task(void *param){
 
 void app_main(void)
 {
-    
+
     interrupt_pointer = initialize_timer(TIMER_FREQ, (int)(TIMER_FREQ/SAMPLING_FREQ));
+
+    variant_selector_config();
+    variant_selector = (REG_READ(GPIO_IN_REG)>>16)&7;
 
     //Tworzenie taska przypiętego do rdzenia 1
     xTaskCreate(loop_task, "Loop", 16384, NULL, 1, NULL);
