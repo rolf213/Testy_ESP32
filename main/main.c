@@ -33,7 +33,8 @@ void loop_task(void *param){
 
             //funkcje wyzwalane w pętli
             //variant_selector = (REG_READ(GPIO_IN_REG)>>16)&7;
-            global_out(ramp01[sample], out_variant[variant_selector]);
+            global_out(sinus1378_low[sample], out_variant[variant_selector]);
+            sample = (sample + 1) & RAMP_MASK;
 
             //Busy Loop
             while (*interrupt_pointer == false){
@@ -41,9 +42,9 @@ void loop_task(void *param){
             }
         }
 
-        //printf("variant: %ld remaining ticks: %d \n", variant_selector, counter);
-        sample = (sample + 1) & RAMP_MASK;
-        vTaskDelay(pdMS_TO_TICKS(10));
+        printf("variant: %ld remaining ticks: %d \n", variant_selector, counter);
+        //sample = (sample + 1) & RAMP_MASK;
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
@@ -54,7 +55,8 @@ void app_main(void)
     interrupt_pointer = initialize_timer(TIMER_FREQ, (int)(TIMER_FREQ/SAMPLING_FREQ));
 
     variant_selector_config();
-    variant_selector = (REG_READ(GPIO_IN_REG)>>16)&7;
+    //variant_selector = (REG_READ(GPIO_IN_REG)>>16)&7;
+    variant_selector = 1;
 
     //Tworzenie taska przypiętego do rdzenia 1
     xTaskCreate(loop_task, "Loop", 16384, NULL, 1, NULL);
